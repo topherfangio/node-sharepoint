@@ -109,16 +109,26 @@ function requestToken(params, callback) {
         res.on('end', function () {
 
             parseXml(xml, function (js) {
+                var saml_envelope = js['S:Envelope'];
+                if (!saml_envelope) { callback("SAML Envelope was empty!"); return; }
 
-                // check for errors
-                if (js['S:Body']['S:Fault']) { 
-                    var error = js['S:Body']['S:Fault']['S:Detail']['psf:error']['psf:internalerror']['psf:text'];
+                var saml_body = saml_envelope['S:Body'];
+                if (!saml_body) { callback("SAML Body was empty!"); return; }
+
+                var saml_fault = saml_body['S:Fault'];
+
+                // check for SAmL errors
+                if (saml_fault) { 
+                    var error = saml_fault['S:Detail']['psf:error']['psf:internalerror']['psf:text'];
                     callback(error);
                     return; 
                 } 
 
                 // extract token
-                var token = js['S:Body']['wst:RequestSecurityTokenResponse']['wst:RequestedSecurityToken']['wsse:BinarySecurityToken']['#'];
+                var rstr = saml_body[0]['wst:RequestSecurityTokenResponse'];
+                var rst = rstr[0]['wst:RequestedSecurityToken'];
+                var bst = rst[0]['wsse:BinarySecurityToken'];
+                var token = bst[0]['_'];
 
                 // Now we have the token, we need to submit it to SPO
                 submitToken({
@@ -148,9 +158,6 @@ function submitToken(params, callback) {
     };
 
     var protocol = (ssl ? https : http);
-
-    
-
     var req = protocol.request(options, function (res) {
 
         var xml = '';
@@ -160,7 +167,6 @@ function submitToken(params, callback) {
         })
 
         res.on('end', function () {
-
             var cookies = parseCookies(res.headers['set-cookie'])
 
             callback(null, {
