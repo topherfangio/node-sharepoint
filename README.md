@@ -1,4 +1,7 @@
 # SharePoint client for Node.js
+
+*NOTE: This fork is specifically geared toward building support for SharePoint 2013 which probably breaks support for 2010. Currently, the authentication piece has been updated, but nothing else, so the remaining API is untested and likely broken. The README will be updated if and when more support is added.*
+
 This Node module provides a SharePoint client for Node.js applications. This allows you to access SharePoint 2010 lists and items, using ListData.svc, an OData based REST API for SharePoint 2010. 
 
 The current version is restricted to SharePoint Online, using claims based authentication.
